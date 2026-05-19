@@ -12,9 +12,9 @@ from utils.logging import logger
 
 
 async def analyze_image(
-    image_path: Optional[Path] = None,
-    image_url: Optional[str] = None,
-    custom_prompt: Optional[str] = None
+        image_path: Optional[Path] = None,
+        image_url: Optional[str] = None,
+        custom_prompt: Optional[str] = None
 ) -> str:
     """
     Analyze an image using GPT-4 Vision.
@@ -36,7 +36,7 @@ async def analyze_image(
             final_url = encode_image_to_base64(image_path)
         else:
             raise ValueError("Either image_path or image_url must be provided")
-        
+
         # Default prompt
         if custom_prompt is None:
             custom_prompt = """Проанализируй это изображение подробно:
@@ -48,16 +48,16 @@ async def analyze_image(
             5. Дай полезную информацию или рекомендации
             
             Ответь на русском языке."""
-        
+
         # Analyze image
         logger.debug("Analyzing image with Vision API")
         result = await openai_client.analyze_image(
             image_url=final_url,
             prompt=custom_prompt
         )
-        
+
         return result
-        
+
     except Exception as e:
         logger.error(f"Error analyzing image: {e}")
         raise
@@ -76,9 +76,9 @@ def encode_image_to_base64(image_path: Path) -> str:
     try:
         with open(image_path, "rb") as image_file:
             image_data = image_file.read()
-        
+
         base64_image = base64.b64encode(image_data).decode('utf-8')
-        
+
         # Determine MIME type
         extension = image_path.suffix.lower()
         mime_types = {
@@ -89,9 +89,9 @@ def encode_image_to_base64(image_path: Path) -> str:
             '.webp': 'image/webp'
         }
         mime_type = mime_types.get(extension, 'image/jpeg')
-        
+
         return f"data:{mime_type};base64,{base64_image}"
-        
+
     except Exception as e:
         logger.error(f"Error encoding image: {e}")
         raise
@@ -115,7 +115,7 @@ async def analyze_document_image(image_path: Path) -> str:
     4. Представь данные структурированно
     
     Ответь на русском языке."""
-    
+
     return await analyze_image(image_path=image_path, custom_prompt=prompt)
 
 
@@ -137,6 +137,5 @@ async def analyze_object_image(image_path: Path) -> str:
     4. Интересные факты или рекомендации
     
     Ответь на русском языке."""
-    
-    return await analyze_image(image_path=image_path, custom_prompt=prompt)
 
+    return await analyze_image(image_path=image_path, custom_prompt=prompt)

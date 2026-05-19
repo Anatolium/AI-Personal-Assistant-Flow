@@ -29,4 +29,3 @@ if __name__ == "__main__":
         print("\n✅ Бот настроен правильно! Можете запускать: python main.py")
     else:
         print("\n❌ Проверьте TELEGRAM_BOT_TOKEN в .env файле")
-

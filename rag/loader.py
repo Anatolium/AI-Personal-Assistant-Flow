@@ -14,7 +14,7 @@ from utils.logging import logger
 
 class DocumentLoader:
     """Loads and processes documents for RAG."""
-    
+
     def __init__(self):
         """Initialize document loader."""
         self.text_splitter = RecursiveCharacterTextSplitter(
@@ -22,7 +22,7 @@ class DocumentLoader:
             chunk_overlap=RAG_CHUNK_OVERLAP,
             length_function=len,
         )
-    
+
     def load_document(self, file_path: Path) -> List[Dict]:
         """
         Load a single document and split into chunks.
@@ -35,7 +35,7 @@ class DocumentLoader:
         """
         try:
             file_path = Path(file_path)
-            
+
             # Select appropriate loader based on file extension
             if file_path.suffix.lower() == '.pdf':
                 loader = PyPDFLoader(str(file_path))
@@ -43,25 +43,25 @@ class DocumentLoader:
                 loader = TextLoader(str(file_path), encoding='utf-8')
             else:
                 raise ValueError(f"Unsupported file format: {file_path.suffix}")
-            
+
             # Load document
             documents = loader.load()
-            
+
             # Split into chunks
             chunks = self.text_splitter.split_documents(documents)
-            
+
             # Add source metadata
             for chunk in chunks:
                 chunk.metadata['source'] = file_path.name
                 chunk.metadata['file_path'] = str(file_path)
-            
+
             logger.info(f"Loaded {len(chunks)} chunks from {file_path.name}")
             return chunks
-            
+
         except Exception as e:
             logger.error(f"Error loading document {file_path}: {e}")
             raise
-    
+
     def load_directory(self, directory: Path = DOCUMENTS_DIR) -> List[Dict]:
         """
         Load all documents from a directory.
@@ -75,10 +75,10 @@ class DocumentLoader:
         try:
             directory = Path(directory)
             all_chunks = []
-            
+
             # Supported file extensions
             supported_extensions = ['.pdf', '.txt', '.md']
-            
+
             # Find all supported files
             for file_path in directory.rglob('*'):
                 if file_path.suffix.lower() in supported_extensions:
@@ -87,14 +87,14 @@ class DocumentLoader:
                         all_chunks.extend(chunks)
                     except Exception as e:
                         logger.warning(f"Skipping {file_path.name}: {e}")
-            
+
             logger.info(f"Loaded {len(all_chunks)} total chunks from {directory}")
             return all_chunks
-            
+
         except Exception as e:
             logger.error(f"Error loading directory {directory}: {e}")
             raise
-    
+
     def load_text(self, text: str, source: str = "manual_input") -> List[Dict]:
         """
         Load text directly and split into chunks.
@@ -108,19 +108,19 @@ class DocumentLoader:
         """
         try:
             from langchain.schema import Document
-            
+
             # Create document
             document = Document(
                 page_content=text,
                 metadata={"source": source}
             )
-            
+
             # Split into chunks
             chunks = self.text_splitter.split_documents([document])
-            
+
             logger.info(f"Created {len(chunks)} chunks from text input")
             return chunks
-            
+
         except Exception as e:
             logger.error(f"Error loading text: {e}")
             raise
@@ -128,4 +128,3 @@ class DocumentLoader:
 
 # Global loader instance
 document_loader = DocumentLoader()
-

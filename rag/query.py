@@ -12,8 +12,8 @@ from config import RAG_TOP_K
 
 
 async def query_knowledge_base(
-    query: str,
-    conversation_history: Optional[List[Dict]] = None
+        query: str,
+        conversation_history: Optional[List[Dict]] = None
 ) -> str:
     """
     Query the knowledge base and generate response.
@@ -29,23 +29,23 @@ async def query_knowledge_base(
         # Search for relevant documents
         logger.debug(f"Searching knowledge base for: {query}")
         results = vector_index.similarity_search_with_score(query, k=RAG_TOP_K)
-        
+
         if not results:
             logger.warning("No relevant documents found, using fallback")
             return await _fallback_response(query, conversation_history)
-        
+
         # Prepare context from retrieved documents
         context = _prepare_context(results)
-        
+
         # Generate response with context
         response = await _generate_rag_response(
             query=query,
             context=context,
             conversation_history=conversation_history
         )
-        
+
         return response
-        
+
     except Exception as e:
         logger.error(f"Error querying knowledge base: {e}")
         # Fallback to regular GPT response
@@ -63,22 +63,22 @@ def _prepare_context(results: List[tuple]) -> str:
         Formatted context string
     """
     context_parts = []
-    
+
     for i, (doc, score) in enumerate(results, 1):
         source = doc.metadata.get('source', 'Unknown')
         content = doc.page_content.strip()
-        
+
         context_parts.append(
             f"[Источник {i}: {source}]\n{content}\n"
         )
-    
+
     return "\n".join(context_parts)
 
 
 async def _generate_rag_response(
-    query: str,
-    context: str,
-    conversation_history: Optional[List[Dict]] = None
+        query: str,
+        context: str,
+        conversation_history: Optional[List[Dict]] = None
 ) -> str:
     """
     Generate response using RAG context.
@@ -105,7 +105,7 @@ async def _generate_rag_response(
 {context}
 
 Используй этот контекст для ответа на вопрос пользователя."""
-    
+
     # Prepare messages
     messages = [
         {
@@ -113,28 +113,28 @@ async def _generate_rag_response(
             "content": system_prompt.format(context=context)
         }
     ]
-    
+
     # Add conversation history if available
     if conversation_history:
         # Limit history to avoid token limits
         recent_history = conversation_history[-6:]  # Last 3 exchanges
         messages.extend(recent_history)
-    
+
     # Add current query
     messages.append({
         "role": "user",
         "content": query
     })
-    
+
     # Generate response
     response = await openai_client.generate_text_response(messages)
-    
+
     return response
 
 
 async def _fallback_response(
-    query: str,
-    conversation_history: Optional[List[Dict]] = None
+        query: str,
+        conversation_history: Optional[List[Dict]] = None
 ) -> str:
     """
     Fallback to regular GPT response when RAG fails.
@@ -147,7 +147,7 @@ async def _fallback_response(
         Generated response
     """
     logger.info("Using fallback response (no RAG context)")
-    
+
     system_message = {
         "role": "system",
         "content": """Ты - личный ассистент. 
@@ -156,19 +156,19 @@ async def _fallback_response(
 Ответь на основе своих общих знаний, но предупреди пользователя, 
 что это не основано на специфической базе знаний."""
     }
-    
+
     messages = [system_message]
-    
+
     if conversation_history:
         messages.extend(conversation_history[-6:])
-    
+
     messages.append({
         "role": "user",
         "content": query
     })
-    
+
     response = await openai_client.generate_text_response(messages)
-    
+
     return f"⚠️ База знаний не содержит информации по этому вопросу.\n\n{response}"
 
 
@@ -185,23 +185,23 @@ async def add_document_to_knowledge_base(file_path: str) -> dict:
     try:
         from pathlib import Path
         from rag.loader import document_loader
-        
+
         # Load document
         file_path = Path(file_path)
         documents = document_loader.load_document(file_path)
-        
+
         # Add to index
         vector_index.add_documents(documents)
-        
+
         logger.info(f"Added {file_path.name} to knowledge base")
-        
+
         return {
             "success": True,
             "file": file_path.name,
             "chunks": len(documents),
             "message": f"Документ {file_path.name} успешно добавлен ({len(documents)} фрагментов)"
         }
-        
+
     except Exception as e:
         logger.error(f"Error adding document to knowledge base: {e}")
         return {
@@ -219,4 +219,3 @@ def get_knowledge_base_stats() -> dict:
         Dictionary with statistics
     """
     return vector_index.get_stats()
-

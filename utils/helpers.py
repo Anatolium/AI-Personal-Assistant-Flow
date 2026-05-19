@@ -26,7 +26,7 @@ async def save_file_async(file_content: bytes, extension: str = "tmp") -> Path:
     """
     filename = f"{uuid.uuid4()}.{extension}"
     filepath = BASE_DIR / "data" / filename
-    
+
     try:
         async with aiofiles.open(filepath, 'wb') as f:
             await f.write(file_content)
@@ -53,10 +53,10 @@ def convert_ogg_to_wav(ogg_path: Union[str, Path]) -> Path:
     except ImportError as e:
         logger.error(f"pydub not available: {e}. Install ffmpeg and audioop support.")
         raise
-    
+
     ogg_path = Path(ogg_path)
     wav_path = ogg_path.with_suffix('.wav')
-    
+
     try:
         audio = AudioSegment.from_ogg(ogg_path)
         audio.export(wav_path, format='wav')
@@ -129,47 +129,47 @@ def truncate_text(text: str, max_length: int = 100) -> str:
 
 class UserSession:
     """Simple user session manager to store conversation history."""
-    
+
     def __init__(self):
         self.sessions = {}
-    
+
     def get_history(self, user_id: int) -> list:
         """Get conversation history for a user."""
         return self.sessions.get(user_id, [])
-    
+
     def add_message(self, user_id: int, role: str, content: str):
         """Add a message to user's conversation history."""
         if user_id not in self.sessions:
             self.sessions[user_id] = []
-        
+
         self.sessions[user_id].append({
             "role": role,
             "content": content
         })
-        
+
         # Limit history length
         from config import MAX_HISTORY_LENGTH
         if len(self.sessions[user_id]) > MAX_HISTORY_LENGTH * 2:
             self.sessions[user_id] = self.sessions[user_id][-MAX_HISTORY_LENGTH * 2:]
-    
+
     def clear_history(self, user_id: int):
         """Clear conversation history for a user."""
         if user_id in self.sessions:
             del self.sessions[user_id]
-    
+
     def get_mode(self, user_id: int) -> str:
         """Get current mode for a user."""
         return self.sessions.get(f"{user_id}_mode", "text")
-    
+
     def set_mode(self, user_id: int, mode: str):
         """Set mode for a user."""
         self.sessions[f"{user_id}_mode"] = mode
-    
+
     def get_voice(self, user_id: int) -> str:
         """Get current voice setting for a user."""
         from config import DEFAULT_VOICE
         return self.sessions.get(f"{user_id}_voice", DEFAULT_VOICE)
-    
+
     def set_voice(self, user_id: int, voice: str):
         """Set voice for a user."""
         self.sessions[f"{user_id}_voice"] = voice
@@ -177,4 +177,3 @@ class UserSession:
 
 # Global session manager instance
 user_sessions = UserSession()
-

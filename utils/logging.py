@@ -13,16 +13,16 @@ from config import LOG_LEVEL, LOG_FILE
 
 class ColoredFormatter(logging.Formatter):
     """Custom formatter with colors for console output."""
-    
+
     COLORS = {
-        'DEBUG': '\033[36m',      # Cyan
-        'INFO': '\033[32m',       # Green
-        'WARNING': '\033[33m',    # Yellow
-        'ERROR': '\033[31m',      # Red
-        'CRITICAL': '\033[35m',   # Magenta
+        'DEBUG': '\033[36m',  # Cyan
+        'INFO': '\033[32m',  # Green
+        'WARNING': '\033[33m',  # Yellow
+        'ERROR': '\033[31m',  # Red
+        'CRITICAL': '\033[35m',  # Magenta
     }
     RESET = '\033[0m'
-    
+
     def format(self, record):
         log_color = self.COLORS.get(record.levelname, self.RESET)
         record.levelname = f"{log_color}{record.levelname}{self.RESET}"
@@ -41,14 +41,14 @@ def setup_logging(name: Optional[str] = None, level: Optional[str] = None) -> lo
         Configured logger instance
     """
     logger = logging.getLogger(name)
-    
+
     # Set logging level
     log_level = getattr(logging, level or LOG_LEVEL)
     logger.setLevel(log_level)
-    
+
     # Remove existing handlers to avoid duplicates
     logger.handlers.clear()
-    
+
     # Console handler with colors
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(log_level)
@@ -58,7 +58,7 @@ def setup_logging(name: Optional[str] = None, level: Optional[str] = None) -> lo
     )
     console_handler.setFormatter(console_formatter)
     logger.addHandler(console_handler)
-    
+
     # File handler
     file_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
     file_handler.setLevel(log_level)
@@ -68,10 +68,9 @@ def setup_logging(name: Optional[str] = None, level: Optional[str] = None) -> lo
     )
     file_handler.setFormatter(file_formatter)
     logger.addHandler(file_handler)
-    
+
     return logger
 
 
 # Create default logger
 logger = setup_logging('bot')
-

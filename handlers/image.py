@@ -14,25 +14,25 @@ from utils.helpers import cleanup_file
 async def handle_photo_message(message: types.Message):
     """Handle photo messages."""
     user_id = message.from_user.id
-    
+
     logger.info(f"Photo message from user {user_id}")
-    
+
     # Show typing indicator
     await bot.send_chat_action(message.chat.id, 'typing')
-    
+
     try:
         # Get the largest photo
         photo = message.photo[-1]
-        
+
         # Get caption if provided
         caption = message.caption
-        
+
         # Get file URL (for Vision API)
         file_info = await bot.get_file(photo.file_id)
         file_url = f"https://api.telegram.org/file/bot{bot.token}/{file_info.file_path}"
-        
+
         logger.debug(f"Image URL: {file_url}")
-        
+
         # Notify user
         if caption:
             await bot.send_message(
@@ -41,20 +41,20 @@ async def handle_photo_message(message: types.Message):
             )
         else:
             await bot.send_message(message.chat.id, "📸 Анализирую изображение...")
-        
+
         # Process image request
         response = await route_image_request(
             user_id=user_id,
             image_url=file_url,
             caption=caption
         )
-        
+
         # Send analysis result
         await bot.send_message(
             message.chat.id,
             f"🔍 **Анализ изображения:**\n\n{response['text']}"
         )
-    
+
     except Exception as e:
         logger.error(f"Error handling photo message: {e}")
         await bot.send_message(
@@ -69,7 +69,7 @@ async def handle_document_message(message: types.Message):
     """Handle document messages (could be PDFs for RAG)."""
     user_id = message.from_user.id
     document = message.document
-    
+
     # Check if it's a supported document type
     if document.mime_type == "application/pdf":
         await bot.send_message(

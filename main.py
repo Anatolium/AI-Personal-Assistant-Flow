@@ -13,7 +13,7 @@ from utils.logging import logger
 async def setup_bot():
     """Setup bot with handlers and initialize RAG if needed."""
     logger.info("Bot starting up...")
-    
+
     # Import handlers (they will register themselves via decorators)
     try:
         from handlers import start, text, voice, image, document_upload
@@ -21,26 +21,30 @@ async def setup_bot():
     except Exception as e:
         logger.error(f"Error importing handlers: {e}", exc_info=True)
         raise
-    
+
     # Initialize RAG index if documents exist
     try:
         from rag.index import vector_index
         from config import DOCUMENTS_DIR
-        
+
         # Check if documents directory has files
         docs = list(DOCUMENTS_DIR.glob('*'))
         docs = [d for d in docs if d.is_file() and d.suffix in ['.pdf', '.txt', '.md']]
-        
+
         if docs:
             logger.info(f"Found {len(docs)} documents, indexing...")
-            count = vector_index.index_documents_directory(force_reindex=False)
-            logger.info(f"Indexed {count} document chunks")
+            stats = vector_index.get_stats()
+            if stats.get("total_documents", 0) == 0:
+                count = vector_index.index_documents_directory(force_reindex=False)
+                logger.info(f"Indexed {count} document chunks")
+            else:
+                logger.info("Vector store already contains documents, skipping indexing")
         else:
             logger.info("No documents found in data/documents/")
-    
+
     except Exception as e:
         logger.warning(f"Could not initialize RAG index: {e}")
-    
+
     try:
         bot_info = await bot.get_me()
         logger.info(f"Bot started: @{bot_info.username}")
@@ -63,14 +67,14 @@ async def main():
     try:
         # Setup bot
         await setup_bot()
-        
+
         # Start polling
         logger.info("Starting bot polling...")
         await bot.infinity_polling(
             timeout=10,
             skip_pending=True
         )
-        
+
     except KeyboardInterrupt:
         logger.info("Bot stopped by user (Ctrl+C)")
     except Exception as e:
@@ -82,9 +86,9 @@ async def main():
 
 if __name__ == "__main__":
     try:
-        logger.info("="*60)
+        logger.info("=" * 60)
         logger.info("Personal Assistant Bot - Starting")
-        logger.info("="*60)
+        logger.info("=" * 60)
         asyncio.run(main())
     except KeyboardInterrupt:
         logger.info("Bot stopped")

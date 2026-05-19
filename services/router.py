@@ -17,9 +17,9 @@ from config import BotMode
 
 
 async def route_text_request(
-    user_id: int,
-    text: str,
-    mode: Optional[str] = None
+        user_id: int,
+        text: str,
+        mode: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Route text request to appropriate handler.
@@ -36,13 +36,13 @@ async def route_text_request(
         # Determine mode
         if mode is None:
             mode = user_sessions.get_mode(user_id)
-        
+
         # Get conversation history
         history = user_sessions.get_history(user_id)
-        
+
         # Check if user wants to generate an image
         image_intent = await detect_image_generation_intent(text, history)
-        
+
         if image_intent.get('needs_generation') and image_intent.get('confidence', 0) > 0.5:
             # User wants to generate an image
             logger.info(f"Image generation request detected for user {user_id}")
@@ -51,10 +51,10 @@ async def route_text_request(
                 prompt=image_intent.get('prompt', text),
                 original_text=text
             )
-        
+
         # Add user message to history
         user_sessions.add_message(user_id, "user", text)
-        
+
         # Route based on mode
         if mode == BotMode.RAG:
             # Use RAG for knowledge base queries
@@ -64,16 +64,16 @@ async def route_text_request(
             # Standard GPT response
             messages = history + [{"role": "user", "content": text}]
             response_text = await openai_client.generate_text_response(messages)
-        
+
         # Add assistant response to history
         user_sessions.add_message(user_id, "assistant", response_text)
-        
+
         logger.info(f"Text request processed for user {user_id}")
         return {
             "text": response_text,
             "mode": mode
         }
-        
+
     except Exception as e:
         logger.error(f"Error routing text request: {e}")
         return {
@@ -83,8 +83,8 @@ async def route_text_request(
 
 
 async def route_voice_request(
-    user_id: int,
-    voice_path: Path
+        user_id: int,
+        voice_path: Path
 ) -> Dict[str, Any]:
     """
     Route voice request: transcribe, process, and generate voice response.
@@ -100,10 +100,10 @@ async def route_voice_request(
         # Transcribe voice to text
         logger.debug(f"Transcribing voice for user {user_id}")
         transcription = await transcribe_voice_message(voice_path)
-        
+
         # Process text request (may include image generation)
         text_response = await route_text_request(user_id, transcription)
-        
+
         # Check if response contains an image
         if text_response.get('has_image'):
             # If image was generated, return without voice response
@@ -116,7 +116,7 @@ async def route_voice_request(
                 "revised_prompt": text_response.get("revised_prompt"),
                 "voice_path": None  # No voice response when image is generated
             }
-        
+
         # Generate voice response for normal text
         user_voice = user_sessions.get_voice(user_id)
         logger.debug(f"Generating voice response with voice: {user_voice}")
@@ -124,7 +124,7 @@ async def route_voice_request(
             text_response["text"],
             voice=user_voice
         )
-        
+
         logger.info(f"Voice request processed for user {user_id}")
         return {
             "text": text_response["text"],
@@ -132,7 +132,7 @@ async def route_voice_request(
             "voice_path": voice_response_path,
             "has_image": False
         }
-        
+
     except Exception as e:
         logger.error(f"Error routing voice request: {e}")
         return {
@@ -142,10 +142,10 @@ async def route_voice_request(
 
 
 async def route_image_request(
-    user_id: int,
-    image_path: Optional[Path] = None,
-    image_url: Optional[str] = None,
-    caption: Optional[str] = None
+        user_id: int,
+        image_path: Optional[Path] = None,
+        image_url: Optional[str] = None,
+        caption: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Route image request: analyze image with Vision API.
@@ -164,7 +164,7 @@ async def route_image_request(
         custom_prompt = None
         if caption:
             custom_prompt = f"{caption}\n\nПроанализируй изображение с учетом этого вопроса."
-        
+
         # Analyze image
         logger.debug(f"Analyzing image for user {user_id}")
         analysis = await analyze_image(
@@ -172,19 +172,19 @@ async def route_image_request(
             image_url=image_url,
             custom_prompt=custom_prompt
         )
-        
+
         # Add to conversation history
         context = f"[Пользователь отправил изображение]"
         if caption:
             context += f" с подписью: {caption}"
         user_sessions.add_message(user_id, "user", context)
         user_sessions.add_message(user_id, "assistant", analysis)
-        
+
         logger.info(f"Image request processed for user {user_id}")
         return {
             "text": analysis
         }
-        
+
     except Exception as e:
         logger.error(f"Error routing image request: {e}")
         return {
@@ -194,8 +194,8 @@ async def route_image_request(
 
 
 async def route_rag_request(
-    user_id: int,
-    query: str
+        user_id: int,
+        query: str
 ) -> Dict[str, Any]:
     """
     Route RAG request: query knowledge base.
@@ -209,24 +209,24 @@ async def route_rag_request(
     """
     try:
         from rag.query import query_knowledge_base
-        
+
         # Get conversation history
         history = user_sessions.get_history(user_id)
-        
+
         # Query knowledge base
         logger.debug(f"Querying knowledge base for user {user_id}")
         response = await query_knowledge_base(query, history)
-        
+
         # Add to history
         user_sessions.add_message(user_id, "user", query)
         user_sessions.add_message(user_id, "assistant", response)
-        
+
         logger.info(f"RAG request processed for user {user_id}")
         return {
             "text": response,
             "mode": "rag"
         }
-        
+
     except Exception as e:
         logger.error(f"Error routing RAG request: {e}")
         # Fallback to regular text response
@@ -234,12 +234,12 @@ async def route_rag_request(
 
 
 async def route_image_generation_request(
-    user_id: int,
-    prompt: str,
-    original_text: str,
-    size: str = "1024x1024",
-    quality: str = "standard",
-    style: str = "vivid"
+        user_id: int,
+        prompt: str,
+        original_text: str,
+        size: str = "1024x1024",
+        quality: str = "standard",
+        style: str = "vivid"
 ) -> Dict[str, Any]:
     """
     Route image generation request: generate image with DALL-E.
@@ -257,7 +257,7 @@ async def route_image_generation_request(
     """
     try:
         logger.info(f"Generating image for user {user_id}: {prompt[:100]}...")
-        
+
         # Generate image
         result = await generate_image(
             prompt=prompt,
@@ -265,23 +265,23 @@ async def route_image_generation_request(
             quality=quality,
             style=style
         )
-        
+
         # Prepare response text
         response_text = f"🎨 Изображение создано!\n\n"
-        
+
         if result['revised_prompt'] != result['original_prompt']:
             response_text += f"**Улучшенный промпт:**\n{result['revised_prompt']}\n\n"
-        
+
         response_text += "Вот что получилось:"
-        
+
         # Add to conversation history
         user_sessions.add_message(user_id, "user", f"[Запрос на генерацию изображения: {original_text}]")
         user_sessions.add_message(
-            user_id, 
-            "assistant", 
+            user_id,
+            "assistant",
             f"[Изображение создано: {result['revised_prompt'][:100]}...]"
         )
-        
+
         logger.info(f"Image generation completed for user {user_id}")
         return {
             "text": response_text,
@@ -290,27 +290,26 @@ async def route_image_generation_request(
             "original_prompt": result['original_prompt'],
             "has_image": True
         }
-        
+
     except Exception as e:
         logger.error(f"Error routing image generation request: {e}")
-        
+
         # Add error to history
         user_sessions.add_message(user_id, "user", f"[Запрос на генерацию изображения: {original_text}]")
-        
+
         error_message = "❌ Извините, произошла ошибка при генерации изображения. "
-        
+
         if "billing" in str(e).lower() or "quota" in str(e).lower():
             error_message += "Возможно, исчерпан лимит API. Проверьте баланс OpenAI."
         elif "content_policy" in str(e).lower():
             error_message += "Запрос нарушает политику контента OpenAI."
         else:
             error_message += f"Попробуйте еще раз или перефразируйте запрос."
-        
+
         user_sessions.add_message(user_id, "assistant", error_message)
-        
+
         return {
             "text": error_message,
             "error": str(e),
             "has_image": False
         }
-

@@ -29,4 +29,3 @@ def setup_env(monkeypatch):
     monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "test_token_12345")
     monkeypatch.setenv("OPENAI_API_KEY", "test_openai_key_12345")
     monkeypatch.setenv("LOG_LEVEL", "ERROR")  # Reduce logging in tests
-

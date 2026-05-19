@@ -23,7 +23,7 @@ async def transcribe_voice_message(audio_path: Union[str, Path]) -> str:
     """
     audio_path = Path(audio_path)
     wav_path = None
-    
+
     try:
         # Convert OGG to WAV if needed
         if audio_path.suffix.lower() == '.ogg':
@@ -32,19 +32,18 @@ async def transcribe_voice_message(audio_path: Union[str, Path]) -> str:
             transcription_path = wav_path
         else:
             transcription_path = audio_path
-        
+
         # Transcribe using OpenAI Whisper
         text = await openai_client.transcribe_audio(transcription_path)
-        
+
         logger.info(f"Transcription completed: {len(text)} characters")
         return text
-        
+
     except Exception as e:
         logger.error(f"Error in voice transcription: {e}")
         raise
-        
+
     finally:
         # Cleanup converted file if created
         if wav_path and wav_path != audio_path:
             cleanup_file(wav_path)
-

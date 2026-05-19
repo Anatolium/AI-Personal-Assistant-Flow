@@ -28,6 +28,7 @@ USE_PROXYAPI = os.getenv("USE_PROXYAPI", "true").lower() == "true"
 PROXYAPI_BASE_URL = "https://api.proxyapi.ru/openai/v1"
 OPENAI_BASE_URL = PROXYAPI_BASE_URL if USE_PROXYAPI else "https://api.openai.com/v1"
 
+
 # Bot Modes
 class BotMode:
     TEXT = "text"
@@ -35,16 +36,19 @@ class BotMode:
     VISION = "vision"
     RAG = "rag"
 
+
 DEFAULT_MODE = os.getenv("BOT_MODE", BotMode.TEXT)
+
 
 # Voice Configuration
 class VoiceType:
-    ALLOY = "alloy"      # Neutral
-    ECHO = "echo"        # Male
-    NOVA = "nova"        # Female
-    FABLE = "fable"      # Male (British)
-    ONYX = "onyx"        # Male (Deep)
+    ALLOY = "alloy"  # Neutral
+    ECHO = "echo"  # Male
+    NOVA = "nova"  # Female
+    FABLE = "fable"  # Male (British)
+    ONYX = "onyx"  # Male (Deep)
     SHIMMER = "shimmer"  # Female (Warm)
+
 
 DEFAULT_VOICE = os.getenv("DEFAULT_VOICE", VoiceType.ALLOY)
 
@@ -80,7 +84,7 @@ LOG_FILE = BASE_DIR / "bot.log"
 # RAG Configuration
 RAG_CHUNK_SIZE = 1000
 RAG_CHUNK_OVERLAP = 200
-RAG_TOP_K = 3
+RAG_TOP_K = 5
 
 # OpenAI Settings
 TEMPERATURE = 0.7
@@ -88,4 +92,3 @@ MAX_TOKENS = 1500
 
 # User session settings
 MAX_HISTORY_LENGTH = 10  # Maximum number of messages to keep in history
-
